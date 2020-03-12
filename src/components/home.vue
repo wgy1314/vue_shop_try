@@ -17,7 +17,7 @@
           background-color="#333744"
           text-color="#fff"
           active-text-color="#409efe"
-          unique-opened="true"
+          :unique-opened="true"
           :collapse="isCollapse"
           :collapse-transition="false"
           :router="true"
@@ -90,7 +90,6 @@ export default {
       const { data: res } = await this.$http.get("menus");
       if (res.meta.status !== 200) return this.$message.error(res.meta.msg);
       this.menuList = res.data;
-      console.log(res);
     },
     // 折叠菜单
     toggleCollapse() {

@@ -17,15 +17,99 @@
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type='primary'>添加用户</el-button>
+          <el-button type="primary">添加用户</el-button>
         </el-col>
       </el-row>
+
+      <!-- 用户列表区域 -->
+      <el-table :data="userlist" border stripe>
+        <el-table-column type="index" label="#"></el-table-column>
+        <el-table-column label="姓名" prop="username"></el-table-column>
+        <el-table-column label="邮箱" prop="email"></el-table-column>
+        <el-table-column label="电话" prop="mobile"></el-table-column>
+        <el-table-column label="角色" prop="role_name"></el-table-column>
+        <el-table-column label="状态">
+          <template v-slot:default="scope">
+            <el-switch v-model="scope.row.mg_state" @change="userStateChanged(scope.row)"></el-switch>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180px">
+          <!-- v-slot:default="scope" -->
+          <template>
+            <el-button type="primary" icon="el-icon-edit" size="mini" circle></el-button>
+            <el-button type="danger" icon="el-icon-delete" size="mini" circle></el-button>
+            <el-tooltip effect="dark" content="分配颜色" placement="top" :enterable="false">
+              <el-button type="warning" icon="el-icon-setting" size="mini" circle></el-button>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+      <!-- 分页区域 -->
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="queryInfo.pagenum"
+        :page-sizes="[1, 2, 5, 10]"
+        :page-size="queryInfo.pagesize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      ></el-pagination>
     </el-card>
   </div>
 </template>
 
 <script>
-export default {};
+export default {
+  data() {
+    return {
+      //获取用户列表的参数对象
+      queryInfo: {
+        query: "",
+        pagenum: 1,
+        pagesize: 2
+      },
+      userlist: [],
+      total: 0
+    };
+  },
+  created() {
+    this.getUserList();
+  },
+
+  methods: {
+    async getUserList() {
+      const { data: res } = await this.$http.get("users", {
+        params: this.queryInfo
+      });
+      if (res.meta.status !== 200) {
+        return this.$message.error("获取列表失败!");
+      }
+      this.userlist = res.data.users;
+      this.total = res.data.total;
+      console.log(res);
+    },
+    //监听分页数
+    handleSizeChange(newSize) {
+      this.queryInfo.pagesize = newSize;
+      this.getUserList();
+    },
+    //监听分页值
+    handleCurrentChange(newPage) {
+      this.queryInfo.pagenum = newPage;
+      this.getUserList();
+    },
+    async userStateChanged(userinfo) {
+      const { data: res } = await this.$http.put(
+        `users/${userinfo.id}/state/${userinfo.mg_state}`
+      );
+      if (res.meta.status !== 200) {
+        userinfo.mg_state = !userinfo.mg_state;
+        return this.$message.error("更改状态失败");
+      }
+      this.$message.success("更新状态成功")
+    }
+  }
+};
 </script>
 
 <style lang="less" scoped>
